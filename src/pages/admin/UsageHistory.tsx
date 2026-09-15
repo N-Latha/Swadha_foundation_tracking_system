@@ -1,104 +1,107 @@
 import { useState } from 'react';
 import { History, Download, Filter, Search } from 'lucide-react';
-import { Card, CardContent } from '../../components/ui';
+import { Card, CardContent, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge, Button } from '../../components/ui';
 import { mockUsageHistory } from '../../services/mockData';
+import { Session } from '../../types';
 
 export default function AdminUsageHistory() {
+  const [history] = useState<Session[]>(mockUsageHistory);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredHistory = mockUsageHistory.filter(session => 
+  const filteredHistory = history.filter(session => 
     session.machineId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    session.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     session.studentId.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const formatDuration = (seconds?: number) => {
-    if (seconds === undefined) return '-';
-    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-    return `${h}h ${m}m`;
-  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <History className="w-6 h-6 text-indigo-600" />
-          Usage History
-        </h1>
-        <button className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors font-medium text-sm">
-          <Download className="w-4 h-4" />
-          Export CSV
-        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <History className="w-6 h-6 text-swadha-blue" />
+            Usage History
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Review historical machine access logs.</p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button variant="outline" className="bg-white dark:bg-slate-800 hidden sm:flex">
+            <Filter className="w-4 h-4 mr-2" />
+            Filter
+          </Button>
+          <Button variant="default" className="bg-swadha-dark hover:bg-slate-800 dark:bg-swadha-blue dark:hover:bg-blue-600 hidden sm:flex">
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-4">
-            <div className="relative w-full sm:max-w-xs">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col sm:flex-row gap-4">
+            <div className="relative w-full sm:max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search Machine or Student ID..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Search by Machine, Student Name, or ID..."
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-swadha-blue transition-colors"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
-            <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors font-medium text-sm sm:w-auto w-full">
-              <Filter className="w-4 h-4" />
-              More Filters
-            </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
-                <tr>
-                  <th className="px-6 py-4">Machine ID</th>
-                  <th className="px-6 py-4">Student ID</th>
-                  <th className="px-6 py-4">Purpose</th>
-                  <th className="px-6 py-4">Start Time</th>
-                  <th className="px-6 py-4">Exit Time</th>
-                  <th className="px-6 py-4">Duration</th>
-                  <th className="px-6 py-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredHistory.map(session => (
-                  <tr key={session.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-medium">{session.machineId}</td>
-                    <td className="px-6 py-4 font-mono">{session.studentId}</td>
-                    <td className="px-6 py-4 capitalize">{session.purpose.replace('_', ' ').toLowerCase()}</td>
-                    <td className="px-6 py-4">
-                      {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td className="px-6 py-4 text-slate-500">
-                      {session.exitTime ? new Date(session.exitTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
-                    </td>
-                    <td className="px-6 py-4 font-medium">
-                      {formatDuration(session.duration)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        session.status === 'COMPLETED' ? 'bg-slate-100 text-slate-700' : 'bg-green-100 text-green-700'
-                      }`}>
-                        {session.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Student</TableHead>
+                <TableHead>Machine ID</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredHistory.map(session => {
+                const start = new Date(session.startTime);
+                const end = session.endTime ? new Date(session.endTime) : new Date();
+                const durationMins = Math.round((end.getTime() - start.getTime()) / 60000);
                 
-                {filteredHistory.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
-                      No history found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                return (
+                  <TableRow key={session.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-slate-900 dark:text-white">{start.toLocaleDateString()}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-slate-900 dark:text-white">{session.studentName}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{session.studentId}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono font-medium">{session.machineId}</TableCell>
+                    <TableCell>
+                      {durationMins} mins
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="neutral">Completed</Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+
+              {filteredHistory.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-32 text-center text-slate-500 dark:text-slate-400">
+                    No usage history found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

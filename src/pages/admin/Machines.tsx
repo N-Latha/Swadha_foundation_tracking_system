@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Monitor, CheckCircle } from 'lucide-react';
-import { Card, CardContent, Modal, Button, Select } from '../../components/ui';
+import { Card, CardContent, Modal, Button, Select, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge } from '../../components/ui';
 import { mockMachines } from '../../services/mockData';
 import { Machine, MachineStatus } from '../../types';
 
@@ -48,33 +48,36 @@ export default function AdminMachines() {
       {showToast && (
         <div className="fixed top-20 right-8 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-in slide-in-from-right-10 fade-in duration-300">
           <CheckCircle className="w-5 h-5" />
-          <span className="font-medium">Machine updated successfully!</span>
+          <span className="font-medium text-sm">Machine updated successfully!</span>
         </div>
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <Monitor className="w-6 h-6 text-swadha-blue" />
-          Machines
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <Monitor className="w-6 h-6 text-swadha-blue" />
+            Machines
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage and monitor hardware statuses.</p>
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-4">
+          <div className="p-4 flex flex-col sm:flex-row gap-4">
             <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search Machine ID..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-swadha-blue"
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-swadha-blue transition-colors"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             
             <select
-              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-swadha-blue"
+              className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-swadha-blue transition-colors"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -86,56 +89,52 @@ export default function AdminMachines() {
             </select>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
-                <tr>
-                  <th className="px-6 py-4">Machine ID</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredMachines.map(machine => (
-                  <tr key={machine.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-medium">{machine.id}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        machine.status === MachineStatus.AVAILABLE ? 'bg-green-100 text-green-700' :
-                        machine.status === MachineStatus.IN_USE ? 'bg-indigo-100 text-indigo-700' :
-                        machine.status === MachineStatus.UNDER_MAINTENANCE ? 'bg-amber-100 text-amber-700' :
-                        'bg-slate-100 text-slate-700'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          machine.status === MachineStatus.AVAILABLE ? 'bg-green-500' :
-                          machine.status === MachineStatus.IN_USE ? 'bg-indigo-500' :
-                          machine.status === MachineStatus.UNDER_MAINTENANCE ? 'bg-amber-500' :
-                          'bg-slate-500'
-                        }`}></span>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[300px]">Machine ID</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredMachines.map(machine => {
+                let badgeVariant: 'success' | 'default' | 'warning' | 'neutral' = 'neutral';
+                if (machine.status === MachineStatus.AVAILABLE) badgeVariant = 'success';
+                if (machine.status === MachineStatus.IN_USE) badgeVariant = 'default';
+                if (machine.status === MachineStatus.UNDER_MAINTENANCE) badgeVariant = 'warning';
+
+                return (
+                  <TableRow key={machine.id}>
+                    <TableCell className="font-mono font-medium">{machine.id}</TableCell>
+                    <TableCell>
+                      <Badge variant={badgeVariant}>
                         {machine.status.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button 
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
                         onClick={() => openEditModal(machine)}
-                        className="text-swadha-blue font-medium hover:text-blue-700 transition-colors px-3 py-1 bg-blue-50 hover:bg-blue-100 rounded-md"
+                        className="text-swadha-blue hover:text-blue-700 dark:hover:text-blue-400"
                       >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                
-                {filteredMachines.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
-                      No machines found matching your filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                        Edit Status
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+              
+              {filteredMachines.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={3} className="h-24 text-center text-slate-500 dark:text-slate-400">
+                    No machines found matching your filters.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -146,14 +145,14 @@ export default function AdminMachines() {
       >
         {selectedMachine && (
           <div className="space-y-4">
-            <div className="text-sm bg-slate-50 p-4 rounded-lg border border-slate-100 flex items-center justify-between">
-              <span className="text-slate-500">Machine ID:</span>
-              <span className="font-mono font-bold text-slate-800">{selectedMachine.id}</span>
+            <div className="text-sm bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Machine ID:</span>
+              <span className="font-mono font-bold text-slate-800 dark:text-white">{selectedMachine.id}</span>
             </div>
             
             <div className="pt-2 space-y-4">
               <Select
-                label="Status"
+                label="New Status"
                 value={updateStatus}
                 onChange={(e) => setUpdateStatus(e.target.value as MachineStatus)}
                 options={[
@@ -164,8 +163,8 @@ export default function AdminMachines() {
                 ]}
               />
 
-              <Button onClick={handleUpdate} className="w-full mt-2 bg-swadha-blue hover:bg-blue-600">
-                SAVE CHANGES
+              <Button onClick={handleUpdate} className="w-full mt-4">
+                Save Changes
               </Button>
             </div>
           </div>

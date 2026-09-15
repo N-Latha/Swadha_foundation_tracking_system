@@ -1,196 +1,167 @@
 import { useState } from 'react';
 import { AlertTriangle, Search, CheckCircle } from 'lucide-react';
-import { Card, CardContent, Modal, Button, Select } from '../../components/ui';
+import { Card, CardContent, Modal, Button, Select, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge } from '../../components/ui';
 import { mockIssues } from '../../services/mockData';
-import { Issue, IssueStatus } from '../../types';
+import { Issue } from '../../types';
 
 export default function AdminIssues() {
   const [issues, setIssues] = useState<Issue[]>(mockIssues);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Modal & Toast state
+  const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Modal State
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [updateStatus, setUpdateStatus] = useState<IssueStatus>(IssueStatus.PENDING);
-  const [actionTaken, setActionTaken] = useState('');
-  const [showToast, setShowToast] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<'PENDING' | 'RESOLVED'>('PENDING');
 
-  const filteredIssues = issues.filter(issue => 
-    issue.machineId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    issue.studentId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredIssues = issues.filter(issue => {
+    const matchesSearch = issue.machineId.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'ALL' || issue.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  const openUpdateModal = (issue: Issue) => {
+  const openResolveModal = (issue: Issue) => {
     setSelectedIssue(issue);
     setUpdateStatus(issue.status);
-    setActionTaken(issue.actionTaken || '');
     setIsModalOpen(true);
   };
 
   const handleUpdate = () => {
     if (!selectedIssue) return;
     
-    // Update local state
-    setIssues(issues.map(issue => {
-      if (issue.id === selectedIssue.id) {
-        return {
-          ...issue,
-          status: updateStatus,
-          actionTaken
-        };
-      }
-      return issue;
-    }));
-    
-    // In a real app, you would make an API call here.
+    setIssues(issues.map(i => 
+      i.id === selectedIssue.id ? { ...i, status: updateStatus } : i
+    ));
     setIsModalOpen(false);
-    
-    // Show Toast
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300 relative">
-      
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-20 right-8 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-in slide-in-from-right-10 fade-in duration-300">
-          <CheckCircle className="w-5 h-5" />
-          <span className="font-medium">Issue updated successfully!</span>
-        </div>
-      )}
-
+    <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-          <AlertTriangle className="w-6 h-6 text-red-500" />
-          Issues Management
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <AlertTriangle className="w-6 h-6 text-red-500" />
+            Issue Tracking
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Review and resolve reported hardware issues.</p>
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-4">
+          <div className="p-4 flex flex-col sm:flex-row gap-4 border-b border-slate-100 dark:border-slate-800/50">
             <div className="relative w-full sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search Machine or Student ID..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Search by Machine ID..."
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-swadha-blue transition-colors"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            
+            <select
+              className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-swadha-blue transition-colors"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="ALL">All Issues</option>
+              <option value="PENDING">Pending</option>
+              <option value="RESOLVED">Resolved</option>
+            </select>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
-                <tr>
-                  <th className="px-6 py-4">Machine</th>
-                  <th className="px-6 py-4">Student</th>
-                  <th className="px-6 py-4">Issue</th>
-                  <th className="px-6 py-4">Reported At</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredIssues.map(issue => (
-                  <tr key={issue.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-medium">{issue.machineId}</td>
-                    <td className="px-6 py-4 font-mono">{issue.studentId}</td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium capitalize">{issue.issueType.replace(/_/g, ' ').toLowerCase()}</div>
-                      <div className="text-xs text-slate-400 mt-1 truncate max-w-xs">{issue.description}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {new Date(issue.reportedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        issue.status === IssueStatus.PENDING ? 'bg-amber-100 text-amber-700' :
-                        issue.status === IssueStatus.WORKING_ON_ISSUE ? 'bg-blue-100 text-blue-700' :
-                        issue.status === IssueStatus.RESOLVED ? 'bg-green-100 text-green-700' :
-                        'bg-purple-100 text-purple-700'
-                      }`}>
-                        {issue.status.replace(/_/g, ' ')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button 
-                        onClick={() => openUpdateModal(issue)}
-                        className="text-indigo-600 font-medium hover:text-indigo-800 transition-colors px-3 py-1 bg-indigo-50 hover:bg-indigo-100 rounded-md"
-                      >
-                        Update
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                
-                {filteredIssues.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                      No issues found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Machine ID</TableHead>
+                <TableHead>Issue Description</TableHead>
+                <TableHead>Date Reported</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredIssues.map(issue => (
+                <TableRow key={issue.id}>
+                  <TableCell className="font-mono font-semibold">{issue.machineId}</TableCell>
+                  <TableCell className="max-w-xs">
+                    <p className="truncate" title={issue.description}>
+                      {issue.description}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    {new Date(issue.reportedAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={issue.status === 'RESOLVED' ? 'success' : 'error'}>
+                      {issue.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button 
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openResolveModal(issue)}
+                      className="text-swadha-blue hover:text-blue-700 dark:hover:text-blue-400"
+                    >
+                      Manage
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+
+              {filteredIssues.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-32 text-center text-slate-500 dark:text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <CheckCircle className="w-8 h-8 text-green-400 dark:text-green-500/50" />
+                      <p>No issues found. Everything is looking good!</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Issue Details"
+        title="Manage Issue"
       >
         {selectedIssue && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-y-2 text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">
-              <div className="text-slate-500">Machine:</div>
-              <div className="font-medium">{selectedIssue.machineId}</div>
-              
-              <div className="text-slate-500">Student:</div>
-              <div className="font-medium">{selectedIssue.studentId}</div>
-              
-              <div className="text-slate-500">Issue:</div>
-              <div className="font-medium capitalize">{selectedIssue.issueType.replace(/_/g, ' ').toLowerCase()}</div>
-              
-              <div className="text-slate-500">Reported:</div>
-              <div className="font-medium">{new Date(selectedIssue.reportedAt).toLocaleTimeString()}</div>
+            <div className="text-sm bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Machine:</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-white">{selectedIssue.machineId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Reported:</span>
+                <span className="text-slate-800 dark:text-white">{new Date(selectedIssue.reportedAt).toLocaleString()}</span>
+              </div>
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+                <span className="text-slate-500 dark:text-slate-400 block mb-1">Description:</span>
+                <p className="text-slate-800 dark:text-white">{selectedIssue.description}</p>
+              </div>
             </div>
             
-            <p className="text-sm text-slate-600 italic bg-white border border-slate-200 p-3 rounded-md">
-              "{selectedIssue.description}"
-            </p>
-
             <div className="pt-2 space-y-4">
               <Select
-                label="Status"
+                label="Resolution Status"
                 value={updateStatus}
-                onChange={(e) => setUpdateStatus(e.target.value as IssueStatus)}
+                onChange={(e) => setUpdateStatus(e.target.value as 'PENDING' | 'RESOLVED')}
                 options={[
-                  { label: 'Pending', value: IssueStatus.PENDING },
-                  { label: 'Working on Issue', value: IssueStatus.WORKING_ON_ISSUE },
-                  { label: 'Resolved', value: IssueStatus.RESOLVED },
-                  { label: 'Replacement Provided', value: IssueStatus.REPLACEMENT_PROVIDED },
+                  { label: 'Pending', value: 'PENDING' },
+                  { label: 'Resolved', value: 'RESOLVED' },
                 ]}
               />
 
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-sm font-medium text-slate-700">Action Taken</label>
-                <textarea
-                  className="flex w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[80px] resize-y"
-                  placeholder="Describe action taken..."
-                  value={actionTaken}
-                  onChange={(e) => setActionTaken(e.target.value)}
-                />
-              </div>
-
-              <Button onClick={handleUpdate} className="w-full mt-2">
-                UPDATE
+              <Button onClick={handleUpdate} className="w-full mt-4">
+                Update Issue
               </Button>
             </div>
           </div>
