@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 import StudentLogin from './pages/student/Login';
 import ActiveSession from './pages/student/Session';
@@ -20,8 +21,8 @@ import Home from './pages/Home';
 
 // We will implement these components later
 const Placeholder = ({ title }: { title: string }) => (
-  <div className="flex items-center justify-center min-h-screen bg-slate-50">
-    <h1 className="text-2xl font-bold text-slate-700">{title}</h1>
+  <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors">
+    <h1 className="text-2xl font-bold text-slate-700 dark:text-slate-200">{title}</h1>
   </div>
 );
 
@@ -37,6 +38,7 @@ const RequireAdmin = ({ children }: { children: JSX.Element }) => {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right" toastOptions={{ className: 'dark:bg-slate-800 dark:text-white' }} />
       <Routes>
         {/* Main Entry Point */}
         <Route path="/" element={<Home />} />
