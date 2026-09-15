@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, Monitor, CheckCircle } from 'lucide-react';
 import { Card, CardContent, Modal, Button, Select } from '../../components/ui';
 import { mockMachines } from '../../services/mockData';

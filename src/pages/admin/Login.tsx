@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Button, Input } from '../../components/ui';
 
 export default function AdminLogin() {

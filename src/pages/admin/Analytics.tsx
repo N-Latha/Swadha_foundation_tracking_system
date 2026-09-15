@@ -104,7 +104,7 @@ export default function AdminAnalytics() {
                       paddingAngle={5}
                       dataKey="value"
                     >
-                      {issueData.map((entry, index) => (
+                      {issueData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>

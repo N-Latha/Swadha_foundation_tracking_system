@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
+import { CheckCircle, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '../../components/ui';
 import { Session } from '../../types';
 

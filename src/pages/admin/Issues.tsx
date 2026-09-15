@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, Search, CheckCircle } from 'lucide-react';
 import { Card, CardContent, Modal, Button, Select } from '../../components/ui';
 import { mockIssues } from '../../services/mockData';

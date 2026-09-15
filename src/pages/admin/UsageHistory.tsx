@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { History, Download, Filter, Search } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui';
 import { mockUsageHistory } from '../../services/mockData';
